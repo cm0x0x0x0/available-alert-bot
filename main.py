@@ -1,5 +1,4 @@
 import time
-
 import slack
 import api_response_checker
 import argparse
