@@ -30,6 +30,7 @@ def main():
     parser.add_argument('key_path_to_check', type=str,
                         help="The key path to check in the API response (comma separated).")
     parser.add_argument('interval', type=int, help="The interval (in seconds) at which the task will be repeated.")
+    parser.add_argument('liveness_interval', type=int, help="The interval (in seconds) at which a liveness check will be repeated.")
 
     parse_args = parser.parse_args()
 
@@ -38,6 +39,7 @@ def main():
     api_url = parse_args.api_url
     landing_url = parse_args.landing_url
     interval = parse_args.interval
+    liveness_interval = parse_args.liveness_interval
 
     messenger = slack.Slack(webhook_url)
     checker = api_response_checker.ApiResponseChecker(api_url, key_path_to_check)
@@ -47,14 +49,14 @@ def main():
     check_thread.daemon = True
     check_thread.start()
 
-    liveness_msg = "App is still living ! 😎"
-    liveness_check_interval = 3600
-    liveness_thread = threading.Thread(target=send_message_every_interval, args=(messenger, liveness_msg, liveness_check_interval))
-    liveness_thread.daemon = True
-    liveness_thread.start()
+    if liveness_interval > 0:
+        liveness_msg = "App is still living ! 😎"
+        liveness_thread = threading.Thread(target=send_message_every_interval, args=(messenger, liveness_msg, liveness_interval))
+        liveness_thread.daemon = True
+        liveness_thread.start()
+        liveness_thread.join()
 
     check_thread.join()
-    liveness_thread.join()
 
 if __name__ == "__main__":
     main()
